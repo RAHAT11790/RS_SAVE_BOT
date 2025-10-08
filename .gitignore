@@ -1,4 +1,31 @@
-*.pyc
-__pycache__/
+# Session files
 *.session
+*.session-journal
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables
 .env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS
+.DS_Store
+Thumbs.dbdb
