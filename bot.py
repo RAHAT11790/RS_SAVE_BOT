@@ -29,10 +29,10 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 app = Flask(__name__)
 
 # Configuration from Environment Variables
-API_ID = int(os.environ.get('API_ID', '25976192'))
-API_HASH = os.environ.get('API_HASH', '8ba23141980539b4896e5adbc4ffd2e2')
-BOT_TOKEN = os.environ.get('BOT_TOKEN', '8061585389:AAFT-3cubiYTU9VjX9VVYDE8Q6hh6mJJc-s')
-OWNER_ID = int(os.environ.get('OWNER_ID', '6621572366'))
+API_ID = int(os.environ.get('API_ID')) if os.environ.get('API_ID') else None
+API_HASH = os.environ.get('API_HASH')
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+OWNER_ID = int(os.environ.get('OWNER_ID')) if os.environ.get('OWNER_ID') else None
 SESSION_NAME = os.environ.get('SESSION_NAME', 'user')
 RENDER_URL = os.environ.get('RENDER_URL', '')
 MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2 GB
@@ -270,8 +270,14 @@ class TeleHelper:
 tele = TeleHelper(API_ID, API_HASH, SESSION_NAME)
 
 # Bot setup
-updater = Updater(BOT_TOKEN, use_context=True)
-dp = updater.dispatcher
+updater = None
+if BOT_TOKEN:
+    updater = Updater(BOT_TOKEN, use_context=True)
+    dp = updater.dispatcher
+else:
+    updater = None
+    dp = None
+    logging.warning('BOT_TOKEN not provided; Telegram Updater not initialized. Set BOT_TOKEN env var to start the bot.')
 
 # Bot utilities
 def owner_only(handler):
@@ -522,11 +528,14 @@ def text_message_handler(update: Update, context: CallbackContext):
         logger.info("Temp file cleaned up")
 
 # Add handlers to dispatcher
-dp.add_handler(CommandHandler("start", start))
-dp.add_handler(CommandHandler("login", login_cmd))
-dp.add_handler(CommandHandler("logout", logout_cmd))
-dp.add_handler(CommandHandler("status", status_cmd))
-dp.add_handler(MessageHandler(Filters.text & (~Filters.command), text_message_handler))
+if dp is not None:
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("login", login_cmd))
+    dp.add_handler(CommandHandler("logout", logout_cmd))
+    dp.add_handler(CommandHandler("status", status_cmd))
+    dp.add_handler(MessageHandler(Filters.text & (~Filters.command), text_message_handler))
+else:
+    logging.warning('Dispatcher (dp) not initialized; handlers were not registered.')
 
 # Flask Routes for Render.com
 @app.route('/')
@@ -547,7 +556,10 @@ def health_check():
 def webhook():
     """Webhook endpoint for Telegram bot"""
     update = Update.de_json(request.get_json(), updater.bot)
-    dp.process_update(update)
+    if dp is not None:
+        dp.process_update(update)
+    else:
+        logger.warning('Received webhook update but dispatcher (dp) is not initialized.')
     return jsonify({"status": "ok"})
 
 def start_bot():
@@ -566,7 +578,16 @@ def start_bot():
     
     return "Bot started successfully"
 
+# Start Telegram bot when module is imported (so Gunicorn will run it).
+if updater is not None:
+    try:
+        start_bot()
+    except Exception as e:
+        logger.exception('Failed to start Telegram bot on import: %s', e)
+else:
+    logging.warning('Updater not initialized; bot will not start automatically. Set BOT_TOKEN env var to enable bot.')
+
 # Start bot when app runs
 if __name__ == '__main__':
-    start_bot()
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    # For local development: run Flask directly (bot already started above)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)

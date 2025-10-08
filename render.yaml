@@ -4,15 +4,15 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    startCommand: gunicorn bot:app --bind 0.0.0.0:$PORT
     envVars:
       - key: API_ID
-        value: "25976192"
+        value: "REPLACE_WITH_API_ID"
       - key: API_HASH
-        value: "8ba23141980539b4896e5adbc4ffd2e2"
+        value: "REPLACE_WITH_API_HASH"
       - key: BOT_TOKEN
-        value: "8061585389:AAFT-3cubiYTU9VjX9VVYDE8Q6hh6mJJc-s"
+        value: "REPLACE_WITH_BOT_TOKEN"
       - key: OWNER_ID
-        value: "6621572366"
+        value: "REPLACE_WITH_OWNER_ID"
       - key: SESSION_NAME
         value: "user"
