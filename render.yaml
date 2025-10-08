@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: telegram-media-bridge
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: API_ID
+        value: "25976192"
+      - key: API_HASH
+        value: "8ba23141980539b4896e5adbc4ffd2e2"
+      - key: BOT_TOKEN
+        value: "8061585389:AAFT-3cubiYTU9VjX9VVYDE8Q6hh6mJJc-s"
+      - key: OWNER_ID
+        value: "6621572366"
+      - key: SESSION_NAME
+        value: "user"
+      - key: RENDER_URL
+        fromService:
+          type: web
+          name: telegram-media-bridge
+          property: url
