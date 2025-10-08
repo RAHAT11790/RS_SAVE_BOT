@@ -16,8 +16,3 @@ services:
         value: "6621572366"
       - key: SESSION_NAME
         value: "user"
-      - key: RENDER_URL
-        fromService:
-          type: web
-          name: telegram-media-bridge
-          property: url
